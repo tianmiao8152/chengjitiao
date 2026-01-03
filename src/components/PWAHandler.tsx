@@ -16,11 +16,23 @@ const PWAHandler: React.FC = () => {
   const [showInstallBanner, setShowInstallBanner] = useState(false);
 
   useEffect(() => {
-    window.addEventListener('beforeinstallprompt', (e) => {
+    // 如果用户已经拒绝过或已安装，不再弹出
+    const isDismissed = localStorage.getItem('pwa_install_dismissed');
+    if (isDismissed) return;
+
+    const handler = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallBanner(true);
-    });
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+    
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setShowInstallBanner(false);
+    }
+
+    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   /**
@@ -31,6 +43,7 @@ const PWAHandler: React.FC = () => {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
+      localStorage.setItem('pwa_install_dismissed', 'true');
       setShowInstallBanner(false);
     }
     setDeferredPrompt(null);
@@ -43,13 +56,15 @@ const PWAHandler: React.FC = () => {
     setOfflineReady(false);
     setNeedRefresh(false);
     setShowInstallBanner(false);
+    // 用户手动关闭也视为“已处理”，不再弹出
+    localStorage.setItem('pwa_install_dismissed', 'true');
   };
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+    <div className="fixed top-20 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full sm:w-80">
       {/* 离线就绪提示 */}
       {offlineReady && (
-        <div className="bg-green-600 text-white p-4 rounded-xl shadow-2xl flex items-center justify-between pointer-events-auto animate-in slide-in-from-bottom-4">
+        <div className="bg-green-600 text-white p-4 rounded-xl shadow-2xl flex items-center justify-between pointer-events-auto animate-in fade-in slide-in-from-right-4">
           <div className="flex items-center gap-3">
             <RefreshCw size={20} />
             <span className="text-sm font-medium">应用已就绪，可离线使用！</span>
@@ -62,7 +77,7 @@ const PWAHandler: React.FC = () => {
 
       {/* 更新提示 */}
       {needRefresh && (
-        <div className="bg-blue-600 text-white p-4 rounded-xl shadow-2xl flex items-center justify-between pointer-events-auto animate-in slide-in-from-bottom-4">
+        <div className="bg-blue-600 text-white p-4 rounded-xl shadow-2xl flex items-center justify-between pointer-events-auto animate-in fade-in slide-in-from-right-4">
           <div className="flex flex-col gap-1">
             <span className="text-sm font-bold">新版本已就绪</span>
             <span className="text-xs opacity-90">点击刷新以获取最新功能</span>
@@ -83,20 +98,20 @@ const PWAHandler: React.FC = () => {
 
       {/* 安装提示 */}
       {showInstallBanner && (
-        <div className="bg-white border border-blue-100 p-4 rounded-xl shadow-2xl flex items-center justify-between pointer-events-auto animate-in slide-in-from-bottom-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white">
-              <Download size={24} />
+        <div className="bg-white border border-blue-100 p-4 rounded-xl shadow-2xl flex items-center justify-between pointer-events-auto animate-in fade-in slide-in-from-right-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
+              <Download size={20} />
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-gray-800">安装成绩条生成器</span>
-              <span className="text-xs text-gray-500">添加到主屏幕，使用更方便</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-bold text-gray-800 truncate">安装应用</span>
+              <span className="text-[11px] text-gray-500 line-clamp-1">添加到主屏幕更方便</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 shrink-0">
             <button 
               onClick={handleInstall}
-              className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors"
+              className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors"
             >
               安装
             </button>

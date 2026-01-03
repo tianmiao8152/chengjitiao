@@ -92,7 +92,7 @@ const App: React.FC = () => {
             <Table size={24} />
           </div>
           <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            离线成绩条生成器
+            成绩条生成器
           </h1>
         </div>
         <div className="flex items-center gap-4">
@@ -159,7 +159,7 @@ const App: React.FC = () => {
 
       <footer className="py-8 text-center text-gray-400 text-sm">
         <p>所有处理均在本地浏览器完成，数据不会上传到服务器</p>
-        <p className="mt-1">© 2024 离线成绩条生成器</p>
+        <p className="mt-1">Powered By <a href="https://github.com/TianMiao8152/chengjitiao" target="_blank" rel="noopener noreferrer">TianMiao</a></p>
       </footer>
     </div>
   );

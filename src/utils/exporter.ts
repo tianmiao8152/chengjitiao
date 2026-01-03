@@ -16,25 +16,25 @@ export const exportToXLSX = async (
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('成绩条');
 
-  const { headers, rows, headerMerges = [] } = data;
-  const { gapRows } = config;
+  const { headers, rows, headerMerges = [], merges = [] } = data;
+  const { gapRows, rowsPerStudent = 1 } = config;
 
   let currentRow = 1;
-  const total = rows.length;
+  // 按照单人行数分组计算总进度
+  const studentCount = Math.ceil(rows.length / rowsPerStudent);
   const headerCount = headers.length;
 
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
+  for (let i = 0; i < rows.length; i += rowsPerStudent) {
     const startRowOfStrip = currentRow;
+    const currentStudentIdx = Math.floor(i / rowsPerStudent);
     
-    // 添加多行表头
+    // 1. 添加多行表头
     headers.forEach((headerRowData, hIdx) => {
       const hRow = worksheet.getRow(currentRow);
       hRow.values = headerRowData;
       hRow.font = { bold: true };
       hRow.alignment = { horizontal: 'center', vertical: 'middle' };
       
-      // 样式处理
       if (config.useOptimizedStyle) {
         hRow.fill = {
           type: 'pattern',
@@ -55,7 +55,7 @@ export const exportToXLSX = async (
       currentRow++;
     });
 
-    // 应用表头合并单元格
+    // 2. 应用表头合并单元格
     headerMerges.forEach(m => {
       worksheet.mergeCells(
         startRowOfStrip + m.s.r,
@@ -65,30 +65,59 @@ export const exportToXLSX = async (
       );
     });
 
-    // 添加数据行
-    const dataRow = worksheet.getRow(currentRow);
-    dataRow.values = row;
-    dataRow.alignment = { horizontal: 'center', vertical: 'middle' };
-    
-    row.forEach((_, colIdx) => {
-      const cell = dataRow.getCell(colIdx + 1);
-      cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
-      };
-    });
-    currentRow++;
+    // 3. 添加该学生的所有数据行
+    const studentDataStartRow = currentRow;
+    for (let r = 0; r < rowsPerStudent; r++) {
+      const rowIndex = i + r;
+      if (rowIndex >= rows.length) break;
 
-    // 添加间隔行
+      const rowData = rows[rowIndex];
+      const dRow = worksheet.getRow(currentRow);
+      dRow.values = rowData;
+      dRow.alignment = { horizontal: 'center', vertical: 'middle' };
+      
+      rowData.forEach((_, colIdx) => {
+        const cell = dRow.getCell(colIdx + 1);
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+      currentRow++;
+    }
+
+    // 4. 处理该学生数据行内的合并单元格
+    // 我们需要找出位于当前学生数据行范围内的合并单元格
+    // 原始数据的行索引是从 headerRows 开始的
+    const originalHeaderRows = data.headers.length; // 注意：这里的 data.headers 是原始的，或者是处理后的？
+    // 实际上 rows 是从 headerRows 之后开始的，所以原始行号是 i + originalHeaderRows
+    const studentDataRangeStart = i + originalHeaderRows;
+    const studentDataRangeEnd = studentDataRangeStart + rowsPerStudent - 1;
+
+    merges.forEach(m => {
+      // 如果合并单元格在当前处理的学生行范围内
+      if (m.s.r >= studentDataRangeStart && m.e.r <= studentDataRangeEnd) {
+        const offset = m.s.r - studentDataRangeStart;
+        const rowSpan = m.e.r - m.s.r;
+        
+        worksheet.mergeCells(
+          studentDataStartRow + offset,
+          m.s.c + 1,
+          studentDataStartRow + offset + rowSpan,
+          m.e.c + 1
+        );
+      }
+    });
+
+    // 5. 添加间隔行
     for (let j = 0; j < gapRows; j++) {
       currentRow++;
     }
 
-    if (onProgress && i % 50 === 0) {
-      onProgress(Math.round((i / total) * 100));
-      // 给 UI 线程喘息的机会
+    if (onProgress && currentStudentIdx % 20 === 0) {
+      onProgress(Math.round((currentStudentIdx / studentCount) * 100));
       await new Promise(resolve => setTimeout(resolve, 0));
     }
   }

@@ -23,14 +23,18 @@ const Preview: React.FC<PreviewProps> = ({
   progress = 0
 }) => {
   // 预览前 3 个成绩条
-  const previewCount = Math.min(3, data.rows.length);
-  const previewRows = data.rows.slice(0, previewCount);
+  const previewCount = Math.min(3, Math.ceil(data.rows.length / config.rowsPerStudent));
+  
+  // 提取预览学生的行数据
+  const getPreviewStudentRows = (studentIdx: number) => {
+    const startIdx = studentIdx * config.rowsPerStudent;
+    return data.rows.slice(startIdx, startIdx + config.rowsPerStudent);
+  };
 
   /**
-   * 检查某个单元格是否被合并单元格覆盖
-   * @returns { rendered: boolean, rowSpan: number, colSpan: number }
+   * 检查某个单元格是否被合并单元格覆盖 (针对表头)
    */
-  const getCellSpan = (r: number, c: number) => {
+  const getHeaderCellSpan = (r: number, c: number) => {
     const merge = data.headerMerges?.find(m => 
       r >= m.s.r && r <= m.e.r && c >= m.s.c && c <= m.e.c
     );
@@ -40,6 +44,31 @@ const Preview: React.FC<PreviewProps> = ({
         return {
           rendered: true,
           rowSpan: merge.e.r - merge.s.r + 1,
+          colSpan: merge.e.c - merge.s.c + 1
+        };
+      }
+      return { rendered: false, rowSpan: 1, colSpan: 1 };
+    }
+
+    return { rendered: true, rowSpan: 1, colSpan: 1 };
+  };
+
+  /**
+   * 检查某个单元格是否被合并单元格覆盖 (针对数据行)
+   */
+  const getDataCellSpan = (studentIdx: number, relativeRowIdx: number, colIdx: number) => {
+    const originalHeaderRows = data.headers.length;
+    const absoluteRowIdx = studentIdx * config.rowsPerStudent + relativeRowIdx + originalHeaderRows;
+    
+    const merge = data.merges?.find(m => 
+      absoluteRowIdx >= m.s.r && absoluteRowIdx <= m.e.r && colIdx >= m.s.c && colIdx <= m.e.c
+    );
+
+    if (merge) {
+      if (absoluteRowIdx === merge.s.r && colIdx === merge.s.c) {
+        return {
+          rendered: true,
+          rowSpan: Math.min(merge.e.r - merge.s.r + 1, config.rowsPerStudent - relativeRowIdx),
           colSpan: merge.e.c - merge.s.c + 1
         };
       }
@@ -77,58 +106,69 @@ const Preview: React.FC<PreviewProps> = ({
       <div className="flex-1 overflow-auto bg-gray-100 p-6 rounded-2xl mb-8 flex flex-col items-center gap-4">
         <div className="bg-white p-8 shadow-sm w-full max-w-2xl border border-gray-200">
           <div className="space-y-6">
-            {previewRows.map((row, idx) => (
-              <React.Fragment key={idx}>
-                <div className={`border ${config.useOptimizedStyle ? 'border-gray-300' : 'border-gray-200'}`}>
-                  <table className="w-full text-xs text-center border-collapse">
-                    <thead className={config.useOptimizedStyle ? 'bg-gray-50' : ''}>
-                      {data.headers.map((headerRow, hIdx) => (
-                        <tr key={hIdx}>
-                          {headerRow.map((h, i) => {
-                            const span = getCellSpan(hIdx, i);
-                            if (!span.rendered) return null;
-                            return (
-                              <th 
-                                key={i} 
-                                rowSpan={span.rowSpan}
-                                colSpan={span.colSpan}
-                                className={`border px-2 py-1 font-bold ${config.useOptimizedStyle ? 'border-gray-300' : 'border-gray-200'}`}
-                              >
-                                {String(h || '')}
-                              </th>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </thead>
-                    <tbody>
-                      <tr>
-                        {row.map((cell, i) => (
-                          <td 
-                            key={i} 
-                            className={`border px-2 py-1 ${config.useOptimizedStyle ? 'border-gray-300' : 'border-gray-200'}`}
-                          >
-                            {String(cell || '')}
-                          </td>
+            {Array.from({ length: previewCount }).map((_, studentIdx) => {
+              const studentRows = getPreviewStudentRows(studentIdx);
+              return (
+                <React.Fragment key={studentIdx}>
+                  <div className={`border ${config.useOptimizedStyle ? 'border-gray-300' : 'border-gray-200'}`}>
+                    <table className="w-full text-xs text-center border-collapse">
+                      <thead className={config.useOptimizedStyle ? 'bg-gray-50' : ''}>
+                        {data.headers.map((headerRow, hIdx) => (
+                          <tr key={hIdx}>
+                            {headerRow.map((h, i) => {
+                              const span = getHeaderCellSpan(hIdx, i);
+                              if (!span.rendered) return null;
+                              return (
+                                <th 
+                                  key={i} 
+                                  rowSpan={span.rowSpan}
+                                  colSpan={span.colSpan}
+                                  className={`border px-2 py-1 font-bold ${config.useOptimizedStyle ? 'border-gray-300' : 'border-gray-200'}`}
+                                >
+                                  {String(h || '')}
+                                </th>
+                              );
+                            })}
+                          </tr>
                         ))}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                {idx < previewRows.length - 1 && (
-                  <div className="flex flex-col items-center gap-1 py-2 opacity-30">
-                    {Array.from({ length: config.gapRows }).map((_, i) => (
-                      <div key={i} className="w-full border-t border-dashed border-gray-400 h-1" />
-                    ))}
-                    <span className="text-[10px] text-gray-400">间隔行 ({config.gapRows})</span>
+                      </thead>
+                      <tbody>
+                        {studentRows.map((row, rIdx) => (
+                          <tr key={rIdx}>
+                            {row.map((cell, i) => {
+                              const span = getDataCellSpan(studentIdx, rIdx, i);
+                              if (!span.rendered) return null;
+                              return (
+                                <td 
+                                  key={i} 
+                                  rowSpan={span.rowSpan}
+                                  colSpan={span.colSpan}
+                                  className={`border px-2 py-1 ${config.useOptimizedStyle ? 'border-gray-300' : 'border-gray-200'}`}
+                                >
+                                  {String(cell || '')}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                )}
-              </React.Fragment>
-            ))}
+                  {studentIdx < previewCount - 1 && (
+                    <div className="flex flex-col items-center gap-1 py-2 opacity-30">
+                      {Array.from({ length: config.gapRows }).map((_, i) => (
+                        <div key={i} className="w-full border-t border-dashed border-gray-400 h-1" />
+                      ))}
+                      <span className="text-[10px] text-gray-400">间隔行 ({config.gapRows})</span>
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
             
-            {data.rows.length > previewCount && (
+            {Math.ceil(data.rows.length / config.rowsPerStudent) > previewCount && (
               <div className="text-center py-4 border-t border-dashed text-gray-400 text-sm">
-                ... 还有 {data.rows.length - previewCount} 条数据未显示 ...
+                ... 还有 {Math.ceil(data.rows.length / config.rowsPerStudent) - previewCount} 名学生数据未显示 ...
               </div>
             )}
           </div>

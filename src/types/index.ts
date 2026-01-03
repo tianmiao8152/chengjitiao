@@ -15,6 +15,7 @@ export interface GeneratorConfig {
   gapRows: number;
   useOptimizedStyle: boolean;
   headerRows: number;
+  rowsPerStudent: number; // 每个学生占用的数据行数
 }
 
 export type AppStep = 'upload' | 'select' | 'config' | 'preview';

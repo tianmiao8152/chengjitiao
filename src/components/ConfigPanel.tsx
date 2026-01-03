@@ -57,38 +57,64 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChange, onNext, onB
             <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
               <Layout size={20} />
             </div>
-            <h3 className="font-bold text-gray-800">样式偏好</h3>
+            <h3 className="font-bold text-gray-800">样式与结构</h3>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => onChange({ ...config, useOptimizedStyle: false })}
-              className={`
-                p-4 rounded-xl border-2 transition-all text-left
-                ${!config.useOptimizedStyle 
-                  ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' 
-                  : 'border-white bg-white hover:border-gray-200'}
-              `}
-            >
-              <h4 className="font-bold text-gray-800 mb-1">原始样式</h4>
-              <p className="text-xs text-gray-500">保留表格的基础线条和默认间距。</p>
-            </button>
-            <button
-              onClick={() => onChange({ ...config, useOptimizedStyle: true })}
-              className={`
-                p-4 rounded-xl border-2 transition-all text-left relative overflow-hidden
-                ${config.useOptimizedStyle 
-                  ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' 
-                  : 'border-white bg-white hover:border-gray-200'}
-              `}
-            >
-              {config.useOptimizedStyle && (
-                <div className="absolute top-0 right-0 p-1 bg-blue-500 text-white rounded-bl-lg">
-                  <Sparkles size={12} />
+          <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => onChange({ ...config, useOptimizedStyle: false })}
+                className={`
+                  p-4 rounded-xl border-2 transition-all text-left
+                  ${!config.useOptimizedStyle 
+                    ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' 
+                    : 'border-white bg-white hover:border-gray-200'}
+                `}
+              >
+                <h4 className="font-bold text-gray-800 mb-1">原始样式</h4>
+                <p className="text-xs text-gray-500">保留表格的基础线条和默认间距。</p>
+              </button>
+              <button
+                onClick={() => onChange({ ...config, useOptimizedStyle: true })}
+                className={`
+                  p-4 rounded-xl border-2 transition-all text-left relative overflow-hidden
+                  ${config.useOptimizedStyle 
+                    ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' 
+                    : 'border-white bg-white hover:border-gray-200'}
+                `}
+              >
+                {config.useOptimizedStyle && (
+                  <div className="absolute top-0 right-0 p-1 bg-blue-500 text-white rounded-bl-lg">
+                    <Sparkles size={12} />
+                  </div>
+                )}
+                <h4 className="font-bold text-gray-800 mb-1">打印优化</h4>
+                <p className="text-xs text-gray-500">更清晰的边框和对比度，适合批量打印。</p>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3 pt-4 border-t border-gray-100">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium text-gray-700">单人成绩行数</label>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => onChange({ ...config, rowsPerStudent: Math.max(1, config.rowsPerStudent - 1) })}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600"
+                  >
+                    -
+                  </button>
+                  <span className="w-8 text-center font-bold text-blue-600">{config.rowsPerStudent}</span>
+                  <button 
+                    onClick={() => onChange({ ...config, rowsPerStudent: Math.min(10, config.rowsPerStudent + 1) })}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600"
+                  >
+                    +
+                  </button>
                 </div>
-              )}
-              <h4 className="font-bold text-gray-800 mb-1">打印优化</h4>
-              <p className="text-xs text-gray-500">更清晰的边框和对比度，适合批量打印。</p>
-            </button>
+              </div>
+              <p className="text-xs text-gray-400">
+                如果原始表格中一个学生的数据占用了多行（例如包含评语行），请设置此参数。
+              </p>
+            </div>
           </div>
         </section>
       </div>

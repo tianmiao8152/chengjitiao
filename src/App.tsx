@@ -17,7 +17,8 @@ const App: React.FC = () => {
   const [config, setConfig] = useState<GeneratorConfig>({
     gapRows: 1,
     useOptimizedStyle: true,
-    headerRows: 1
+    headerRows: 1,
+    rowsPerStudent: 1
   });
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [progress, setProgress] = useState<ProgressStatus | null>(null);

@@ -6,7 +6,12 @@ interface FileUploaderProps {
 }
 
 /**
- * 文件上传组件，支持拖拽和点击上传
+ * 文件上传组件
+ * 
+ * 实现了一个美观的上传区域，支持：
+ * 1. 原生文件选择：点击区域触发隐形的 input[type="file"]。
+ * 2. 拖拽上传：支持 drag/drop 交互，并有视觉反馈。
+ * 3. 安全提示：明确告知用户数据在本地处理。
  */
 const FileUploader: React.FC<FileUploaderProps> = ({ onUpload }) => {
   const [isDragging, setIsDragging] = useState(false);

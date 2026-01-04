@@ -19,6 +19,11 @@ interface StepIndicatorProps {
 
 /**
  * 步骤进度指示器组件
+ * 
+ * 视觉化展示当前流程进度，包括：
+ * 1. 节点状态：已完成（蓝色）、进行中（高亮蓝色）、待处理（灰色）。
+ * 2. 连接线动画：随着步骤推进，连接线会有从左往右的填充动画。
+ * 3. 响应式布局：在各种屏幕尺寸下保持居中对齐。
  */
 const StepIndicator: React.FC<StepIndicatorProps> = ({ steps, currentStep }) => {
   const currentIndex = steps.findIndex(s => s.id === currentStep);

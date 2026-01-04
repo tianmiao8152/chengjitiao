@@ -11,6 +11,15 @@ import ConfigPanel from './components/ConfigPanel';
 import Preview from './components/Preview';
 import PWAHandler from './components/PWAHandler';
 
+/**
+ * 应用根组件
+ * 
+ * 管理整个成绩条生成流程的状态，包括：
+ * 1. 流程控制：upload -> select -> config -> preview。
+ * 2. 数据管理：存储解析后的 Excel 数据。
+ * 3. 配置管理：存储用户对生成样式的偏好。
+ * 4. 离线支持：监听网络状态。
+ */
 const App: React.FC = () => {
   const [step, setStep] = useState<AppStep>('upload');
   const [excelData, setExcelData] = useState<ExcelData | null>(null);

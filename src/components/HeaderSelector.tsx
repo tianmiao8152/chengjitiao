@@ -9,7 +9,14 @@ interface HeaderSelectorProps {
 }
 
 /**
- * 表头选择器组件，支持选择多行作为表头
+ * 表头选择器组件
+ * 
+ * 用于让用户从读取到的 Excel 数据前几行中选择表头。
+ * 功能特性：
+ * 1. 多行选择：支持选择单行或连续的多行作为复杂表头。
+ * 2. 自动切分：确认表头后，自动将所选行之后的所有行识别为学生数据。
+ * 3. 合并单元格提取：自动过滤并转换属于表头区域的合并单元格信息。
+ * 4. 连续性校验：强制要求所选表头必须是连续的行。
  */
 const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, onConfirm, onBack }) => {
   const [selectedRows, setSelectedRows] = useState<number[]>([0]); // 默认第一行

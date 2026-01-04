@@ -3,10 +3,19 @@ import { saveAs } from 'file-saver';
 import { ExcelData, GeneratorConfig } from '../types';
 
 /**
- * 生成成绩条并导出为 XLSX
- * @param data 原始数据
- * @param config 生成配置
- * @param onProgress 进度回调
+ * 生成成绩条并导出为 XLSX 格式
+ * 
+ * 该函数使用 exceljs 库创建一个新的工作簿，并根据用户配置生成成绩条。
+ * 支持以下特性：
+ * 1. 多行表头复制：每个成绩条都会带上选定的多行表头。
+ * 2. 样式优化：根据配置应用灰色背景和边框，提高打印清晰度。
+ * 3. 单人多行支持：处理一个学生数据占用多行的情况，并保留其内部合并单元格。
+ * 4. 自动调整列宽：基础的列宽自适应。
+ * 5. 进度回调：支持大批量数据处理时的进度展示。
+ * 
+ * @param data 原始 Excel 数据及元数据
+ * @param config 生成配置（间隔行、样式偏好、单人行数等）
+ * @param onProgress 进度百分比回调函数 (0-100)
  */
 export const exportToXLSX = async (
   data: ExcelData, 

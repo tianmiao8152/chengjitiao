@@ -2,9 +2,14 @@ import * as XLSX from 'xlsx';
 import { ExcelData } from '../types';
 
 /**
- * 读取 Excel 文件并解析为二维数组
- * @param file 上传的文件对象
- * @returns 解析后的 Excel 数据
+ * 读取 Excel 文件并解析为二维数组及元数据
+ * 
+ * 该函数使用 FileReader 读取文件，并通过 xlsx 库解析工作表。
+ * 它会自动提取第一个工作表的数据，并获取其中的合并单元格信息。
+ * 
+ * @param file 上传的 File 对象
+ * @returns Promise<ExcelData> 包含解析后的表头、数据行、文件名及合并单元格信息
+ * @throws Error 当文件为空或解析失败时抛出错误
  */
 export const readExcelFile = async (file: File): Promise<ExcelData> => {
   return new Promise((resolve, reject) => {

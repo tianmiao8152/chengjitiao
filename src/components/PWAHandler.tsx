@@ -3,7 +3,12 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Download, X, RefreshCw } from 'lucide-react';
 
 /**
- * PWA 处理器，负责显示安装提示和更新通知
+ * PWA 处理器组件
+ * 
+ * 负责管理 Progressive Web App 的核心生命周期通知：
+ * 1. 离线就绪：当 Service Worker 缓存完资源后，提示用户应用现在可以断网使用。
+ * 2. 版本更新：当有新代码部署时，提示用户刷新页面以载入最新版本。
+ * 3. 安装引导：在支持的环境下，通过 `beforeinstallprompt` 事件捕获并显示“安装到桌面”的按钮。
  */
 const PWAHandler: React.FC = () => {
   const {

@@ -11,6 +11,11 @@ interface ConfigPanelProps {
 
 /**
  * 生成配置面板组件
+ * 
+ * 提供用户界面用于调整生成成绩条的参数，包括：
+ * - 间隔行数：设置成绩条之间的空行，方便手动裁剪。
+ * - 样式选择：原始样式或针对打印优化的加重样式。
+ * - 结构设置：设置每个学生数据占用的原始行数。
  */
 const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChange, onNext, onBack }) => {
   return (

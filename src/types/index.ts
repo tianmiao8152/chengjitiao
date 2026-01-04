@@ -1,27 +1,42 @@
+/**
+ * 表示 Excel 中的合并单元格区域
+ */
 export interface ExcelMerge {
-  s: { r: number; c: number };
-  e: { r: number; c: number };
+  s: { r: number; c: number }; // 起始行(r)和列(c)
+  e: { r: number; c: number }; // 结束行(r)和列(c)
 }
 
+/**
+ * 解析后的 Excel 数据结构
+ */
 export interface ExcelData {
-  headers: any[][];
-  rows: any[][];
-  fileName: string;
-  merges?: ExcelMerge[];
-  headerMerges?: ExcelMerge[];
+  headers: any[][];        // 已选定的多行表头数据
+  rows: any[][];           // 学生成绩行数据
+  fileName: string;        // 原始文件名
+  merges?: ExcelMerge[];   // 原始文件中所有的合并单元格信息
+  headerMerges?: ExcelMerge[]; // 仅属于表头区域的合并单元格信息（相对坐标）
 }
 
+/**
+ * 生成成绩条的配置参数
+ */
 export interface GeneratorConfig {
-  gapRows: number;
-  useOptimizedStyle: boolean;
-  headerRows: number;
-  rowsPerStudent: number; // 每个学生占用的数据行数
+  gapRows: number;          // 成绩条之间的间隔空行数
+  useOptimizedStyle: boolean; // 是否使用针对打印优化的加重边框样式
+  headerRows: number;       // 表头占用的行数（已弃用，由 headerSelector 决定）
+  rowsPerStudent: number;   // 每个学生在原始数据中占用的行数（如包含评语行）
 }
 
+/**
+ * 应用当前的步骤状态
+ */
 export type AppStep = 'upload' | 'select' | 'config' | 'preview';
 
+/**
+ * 任务处理进度状态
+ */
 export interface ProgressStatus {
-  total: number;
-  current: number;
-  message: string;
+  total: number;    // 总量
+  current: number;  // 当前完成量
+  message: string;  // 提示信息
 }

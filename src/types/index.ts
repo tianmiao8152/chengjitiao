@@ -40,3 +40,17 @@ export interface ProgressStatus {
   current: number;  // 当前完成量
   message: string;  // 提示信息
 }
+
+/**
+ * 通知提示类型
+ */
+export type ToastType = 'success' | 'error' | 'info';
+
+/**
+ * 通知提示项
+ */
+export interface ToastItem {
+  id: string;
+  message: string;
+  type: ToastType;
+}

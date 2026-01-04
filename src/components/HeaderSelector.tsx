@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ExcelData, ExcelMerge } from '../types';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { useToast } from './Toast';
 
 interface HeaderSelectorProps {
   data: ExcelData;
@@ -20,6 +21,7 @@ interface HeaderSelectorProps {
  */
 const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, onConfirm, onBack }) => {
   const [selectedRows, setSelectedRows] = useState<number[]>([0]); // 默认第一行
+  const { showToast } = useToast();
   
   const allRows = [data.headers[0], ...data.rows];
 
@@ -39,7 +41,7 @@ const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, onConfirm, onBack
     const isContinuous = sorted.every((val, i) => i === 0 || val === sorted[i-1] + 1);
     
     if (!isContinuous) {
-      alert('请选择连续的行作为表头');
+      showToast('请选择连续的行作为表头', 'error');
       return;
     }
 

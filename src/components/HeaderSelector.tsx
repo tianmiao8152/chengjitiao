@@ -101,7 +101,7 @@ const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, onConfirm, onBack
                       key={cellIndex} 
                       className={`px-4 py-3 border-x border-gray-50/50 ${isSelected ? 'font-bold text-blue-700' : 'text-gray-600'}`}
                     >
-                      {String(cell || '')}
+                      {String(cell ?? '')}
                     </td>
                   ))}
                 </tr>

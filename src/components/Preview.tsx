@@ -132,7 +132,7 @@ const Preview: React.FC<PreviewProps> = ({
                                   colSpan={span.colSpan}
                                   className={`border px-2 py-1 font-bold ${config.useOptimizedStyle ? 'border-gray-300' : 'border-gray-200'}`}
                                 >
-                                  {String(h || '')}
+                                  {String(h ?? '')}
                                 </th>
                               );
                             })}
@@ -152,7 +152,7 @@ const Preview: React.FC<PreviewProps> = ({
                                   colSpan={span.colSpan}
                                   className={`border px-2 py-1 ${config.useOptimizedStyle ? 'border-gray-300' : 'border-gray-200'}`}
                                 >
-                                  {String(cell || '')}
+                                  {String(cell ?? '')}
                                 </td>
                               );
                             })}

@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ExcelData, ExcelMerge } from '../types';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Layers } from 'lucide-react';
 import { useToast } from './Toast';
+import * as XLSX from 'xlsx';
+import { parseSheetData } from '../utils/excel';
 
 interface HeaderSelectorProps {
   data: ExcelData;
+  workbook?: XLSX.WorkBook;
   onConfirm: (headers: any[][], rows: any[][], headerMerges: ExcelMerge[]) => void;
+  onSheetChange: (newData: ExcelData) => void;
   onBack: () => void;
 }
 
@@ -18,12 +22,13 @@ interface HeaderSelectorProps {
  * 2. 自动切分：确认表头后，自动将所选行之后的所有行识别为学生数据。
  * 3. 合并单元格提取：自动过滤并转换属于表头区域的合并单元格信息。
  * 4. 连续性校验：强制要求所选表头必须是连续的行。
+ * 5. 工作表切换：支持在多个 Sheet 之间切换。
  */
-const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, onConfirm, onBack }) => {
+const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, workbook, onConfirm, onSheetChange, onBack }) => {
   const [selectedRows, setSelectedRows] = useState<number[]>([0]); // 默认第一行
   const { showToast } = useToast();
   
-  const allRows = [data.headers[0], ...data.rows];
+  const allRows = useMemo(() => [data.headers[0], ...data.rows], [data.headers, data.rows]);
 
   const toggleRow = (index: number) => {
     setSelectedRows(prev => {
@@ -33,6 +38,21 @@ const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, onConfirm, onBack
       }
       return [...prev, index].sort((a, b) => a - b);
     });
+  };
+
+  const handleSheetChange = (sheetName: string) => {
+    if (!workbook || sheetName === data.currentSheet) return;
+    try {
+      const newData = parseSheetData(workbook, sheetName);
+      onSheetChange({
+        ...data,
+        ...newData
+      });
+      setSelectedRows([0]); // 切换 sheet 后重置选择
+      showToast(`已切换到工作表: ${sheetName}`, 'success');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : '切换工作表失败', 'error');
+    }
   };
 
   const handleConfirm = () => {
@@ -63,10 +83,34 @@ const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, onConfirm, onBack
 
   return (
     <div className="flex flex-col h-full">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">选择表头范围</h2>
-        <p className="text-gray-500 mt-2">点击选择一行或多行连续数据作为“表头”（支持多级表头）</p>
-        <p className="text-xs text-orange-500 mt-1 bg-orange-50 inline-block px-2 py-0.5 rounded border border-orange-100">⚠️ 仅展示前 10 行数据供选择表头</p>
+      <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">选择表头范围</h2>
+          <p className="text-gray-500 mt-2">点击选择一行或多行连续数据作为“表头”（支持多级表头）</p>
+        </div>
+
+        {data.sheets && data.sheets.length > 1 && (
+          <div className="flex items-center gap-3 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2 text-gray-500 pl-2">
+              <Layers size={18} />
+              <span className="text-sm font-medium whitespace-nowrap">切换工作表:</span>
+            </div>
+            <select 
+              value={data.currentSheet}
+              onChange={(e) => handleSheetChange(e.target.value)}
+              className="bg-gray-50 border-none text-gray-700 text-sm rounded-lg focus:ring-blue-500 block w-full p-1.5 font-bold cursor-pointer hover:bg-gray-100 transition-colors"
+            >
+              {data.sheets.map(name => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-orange-50/50 border border-orange-100 rounded-lg px-4 py-2 mb-4 flex items-center justify-between">
+        <p className="text-xs text-orange-600 font-medium">⚠️ 仅展示前 10 行数据供选择表头</p>
+        <div className="text-xs text-gray-400">当前工作表: <span className="font-bold text-gray-600">{data.currentSheet}</span></div>
       </div>
 
       <div className="flex-1 overflow-auto border border-gray-200 rounded-xl mb-6 bg-white shadow-inner">

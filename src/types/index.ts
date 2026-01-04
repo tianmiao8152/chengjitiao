@@ -15,6 +15,8 @@ export interface ExcelData {
   fileName: string;        // 原始文件名
   merges?: ExcelMerge[];   // 原始文件中所有的合并单元格信息
   headerMerges?: ExcelMerge[]; // 仅属于表头区域的合并单元格信息（相对坐标）
+  sheets?: string[];       // 所有工作表名称
+  currentSheet?: string;   // 当前选中的工作表名称
 }
 
 /**

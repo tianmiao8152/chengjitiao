@@ -29,13 +29,15 @@ const Preview: React.FC<PreviewProps> = ({
   isProcessing = false,
   progress = 0
 }) => {
+  // 计算总学生数
+  const totalStudents = Math.ceil(data.rows.length / (config.rowsPerStudent || 1));
   // 预览前 3 个成绩条
-  const previewCount = Math.min(3, Math.ceil(data.rows.length / config.rowsPerStudent));
+  const previewCount = Math.min(3, totalStudents);
   
   // 提取预览学生的行数据
   const getPreviewStudentRows = (studentIdx: number) => {
-    const startIdx = studentIdx * config.rowsPerStudent;
-    return data.rows.slice(startIdx, startIdx + config.rowsPerStudent);
+    const startIdx = studentIdx * (config.rowsPerStudent || 1);
+    return data.rows.slice(startIdx, startIdx + (config.rowsPerStudent || 1));
   };
 
   /**
@@ -172,14 +174,20 @@ const Preview: React.FC<PreviewProps> = ({
                 </React.Fragment>
               );
             })}
-            
-            {Math.ceil(data.rows.length / config.rowsPerStudent) > previewCount && (
-              <div className="text-center py-4 border-t border-dashed text-gray-400 text-sm">
-                ... 还有 {Math.ceil(data.rows.length / config.rowsPerStudent) - previewCount} 名学生数据未显示 ...
-              </div>
-            )}
           </div>
         </div>
+
+        {totalStudents > previewCount && (
+          <div className="flex flex-col items-center gap-2 py-4 px-6 bg-white/50 backdrop-blur-sm rounded-xl border border-white shadow-sm">
+            <p className="text-gray-500 text-sm font-medium">
+              预览仅展示前 <span className="text-blue-600 font-bold">{previewCount}</span> 条成绩条
+            </p>
+            <div className="flex items-center gap-2 text-xs text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+              <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
+              还有 <span className="font-bold text-gray-600">{totalStudents - previewCount}</span> 名学生数据将在导出时自动生成
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 mb-8">

@@ -12,12 +12,15 @@ import Preview from './components/Preview';
 import PWAHandler from './components/PWAHandler';
 import { ToastProvider, useToast } from './components/Toast';
 
+import * as XLSX from 'xlsx';
+
 /**
  * 核心逻辑组件
  */
 const AppContent: React.FC = () => {
   const [step, setStep] = useState<AppStep>('upload');
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
+  const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
   const [config, setConfig] = useState<GeneratorConfig>({
     gapRows: 1,
     useOptimizedStyle: true,
@@ -45,8 +48,9 @@ const AppContent: React.FC = () => {
       return;
     }
     try {
-      const data = await readExcelFile(file);
+      const { workbook: wb, ...data } = await readExcelFile(file);
       setExcelData(data);
+      setWorkbook(wb);
       setStep('select');
       showToast('文件解析成功', 'success');
     } catch (error) {
@@ -57,6 +61,7 @@ const AppContent: React.FC = () => {
   const handleClearData = () => {
     if (confirm('确定要清除所有本地数据吗？')) {
       setExcelData(null);
+      setWorkbook(null);
       setStep('upload');
       showToast('数据已清除', 'info');
     }
@@ -154,6 +159,8 @@ const AppContent: React.FC = () => {
               >
                 <HeaderSelector
                   data={excelData}
+                  workbook={workbook || undefined}
+                  onSheetChange={(newData) => setExcelData(newData)}
                   onConfirm={(headers, rows, headerMerges) => {
                     setExcelData({ ...excelData, headers, rows, headerMerges });
                     setStep('config');

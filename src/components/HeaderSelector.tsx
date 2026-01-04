@@ -64,42 +64,43 @@ const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, onConfirm, onBack
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800">选择表头范围</h2>
         <p className="text-gray-500 mt-2">点击选择一行或多行连续数据作为“表头”（支持多级表头）</p>
+        <p className="text-xs text-orange-500 mt-1 bg-orange-50 inline-block px-2 py-0.5 rounded border border-orange-100">⚠️ 仅展示前 10 行数据供选择表头</p>
       </div>
 
-      <div className="flex-1 overflow-auto border border-gray-100 rounded-xl mb-6">
-        <table className="w-full text-sm text-left">
-          <thead className="sticky top-0 bg-gray-50">
+      <div className="flex-1 overflow-auto border border-gray-200 rounded-xl mb-6 bg-white shadow-inner">
+        <table className="w-full text-sm text-center border-collapse">
+          <thead className="sticky top-0 bg-gray-50 z-10 shadow-sm">
             <tr>
-              <th className="px-4 py-3 w-20 text-center text-gray-400 font-normal">选择</th>
+              <th className="px-6 py-4 w-24 text-center text-gray-500 font-bold border-b">选择</th>
               {allRows[0].map((_, i) => (
-                <th key={i} className="px-4 py-3 bg-gray-100/50 border-x border-white">列 {i + 1}</th>
+                <th key={i} className="px-6 py-4 bg-gray-50 border-b border-l border-gray-200 text-gray-600 font-bold whitespace-nowrap">列 {i + 1}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {allRows.slice(0, 15).map((row, rowIndex) => {
+            {allRows.slice(0, 10).map((row, rowIndex) => {
               const isSelected = selectedRows.includes(rowIndex);
               return (
                 <tr 
                   key={rowIndex}
                   onClick={() => toggleRow(rowIndex)}
                   className={`
-                    cursor-pointer transition-colors border-b border-gray-50
-                    ${isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}
+                    cursor-pointer transition-all border-b border-gray-100
+                    ${isSelected ? 'bg-blue-50/70' : 'hover:bg-gray-50'}
                   `}
                 >
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-6 py-4 text-center">
                     <div className={`
-                      w-5 h-5 rounded border flex items-center justify-center mx-auto transition-colors
-                      ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 bg-white'}
+                      w-6 h-6 rounded-lg border-2 flex items-center justify-center mx-auto transition-all
+                      ${isSelected ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'border-gray-300 bg-white'}
                     `}>
-                      {isSelected && <Check size={14} />}
+                      {isSelected && <Check size={16} strokeWidth={3} />}
                     </div>
                   </td>
                   {row.map((cell, cellIndex) => (
                     <td 
                       key={cellIndex} 
-                      className={`px-4 py-3 border-x border-gray-50/50 ${isSelected ? 'font-bold text-blue-700' : 'text-gray-600'}`}
+                      className={`px-6 py-4 border-l border-gray-100 whitespace-nowrap text-center ${isSelected ? 'font-semibold text-blue-800' : 'text-gray-600'}`}
                     >
                       {String(cell ?? '')}
                     </td>

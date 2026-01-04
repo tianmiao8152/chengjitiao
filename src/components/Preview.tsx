@@ -111,15 +111,15 @@ const Preview: React.FC<PreviewProps> = ({
       </div>
 
       <div className="flex-1 overflow-auto bg-gray-100 p-6 rounded-2xl mb-8 flex flex-col items-center gap-4">
-        <div className="bg-white p-8 shadow-sm w-full max-w-2xl border border-gray-200">
-          <div className="space-y-6">
+        <div className="bg-white p-8 shadow-sm w-full max-w-5xl border border-gray-200 overflow-x-auto">
+          <div className="space-y-8 min-w-max px-4">
             {Array.from({ length: previewCount }).map((_, studentIdx) => {
               const studentRows = getPreviewStudentRows(studentIdx);
               return (
                 <React.Fragment key={studentIdx}>
-                  <div className={`border ${config.useOptimizedStyle ? 'border-gray-300' : 'border-gray-200'}`}>
-                    <table className="w-full text-xs text-center border-collapse">
-                      <thead className={config.useOptimizedStyle ? 'bg-gray-50' : ''}>
+                  <div className={`border shadow-sm rounded-sm ${config.useOptimizedStyle ? 'border-gray-400' : 'border-gray-200'}`}>
+                    <table className="w-full text-sm text-center border-collapse">
+                      <thead className={config.useOptimizedStyle ? 'bg-gray-100' : 'bg-gray-50'}>
                         {data.headers.map((headerRow, hIdx) => (
                           <tr key={hIdx}>
                             {headerRow.map((h, i) => {
@@ -130,7 +130,7 @@ const Preview: React.FC<PreviewProps> = ({
                                   key={i} 
                                   rowSpan={span.rowSpan}
                                   colSpan={span.colSpan}
-                                  className={`border px-2 py-1 font-bold ${config.useOptimizedStyle ? 'border-gray-300' : 'border-gray-200'}`}
+                                  className={`border px-4 py-2.5 font-bold whitespace-nowrap ${config.useOptimizedStyle ? 'border-gray-400' : 'border-gray-200'}`}
                                 >
                                   {String(h ?? '')}
                                 </th>
@@ -141,7 +141,7 @@ const Preview: React.FC<PreviewProps> = ({
                       </thead>
                       <tbody>
                         {studentRows.map((row, rIdx) => (
-                          <tr key={rIdx}>
+                          <tr key={rIdx} className="hover:bg-gray-50/50 transition-colors">
                             {row.map((cell, i) => {
                               const span = getDataCellSpan(studentIdx, rIdx, i);
                               if (!span.rendered) return null;
@@ -150,7 +150,7 @@ const Preview: React.FC<PreviewProps> = ({
                                   key={i} 
                                   rowSpan={span.rowSpan}
                                   colSpan={span.colSpan}
-                                  className={`border px-2 py-1 ${config.useOptimizedStyle ? 'border-gray-300' : 'border-gray-200'}`}
+                                  className={`border px-4 py-2 whitespace-nowrap ${config.useOptimizedStyle ? 'border-gray-400' : 'border-gray-200'}`}
                                 >
                                   {String(cell ?? '')}
                                 </td>

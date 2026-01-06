@@ -34,24 +34,28 @@ export const exportStandard = async (
     // 1. 添加多行表头
     headers.forEach((headerRowData, hIdx) => {
       const hRow = worksheet.getRow(currentRow);
-      hRow.font = { bold: true };
-      hRow.alignment = { horizontal: 'center', vertical: 'middle' };
       
-      if (config.useOptimizedStyle) {
-        hRow.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFF5F5F5' }
-        };
-      }
-
       for (let colIdx = 0; colIdx < maxCols; colIdx++) {
         const cell = hRow.getCell(colIdx + 1);
         const val = headerRowData[colIdx];
+        
+        // 仅对表头范围内的单元格设置样式
+        cell.font = { bold: true };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        
+        if (config.useOptimizedStyle) {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFF5F5F5' }
+          };
+        }
+
         if (val !== undefined && val !== null) {
           cell.value = val;
+          // 更激进的宽度计算：双字节字符计为 2，增加 1.1 倍数因子并多留 5 个字符空隙
           const valLen = String(val).replace(/[^\x00-\xff]/g, 'aa').length;
-          colWidths[colIdx] = Math.max(colWidths[colIdx], valLen + 2);
+          colWidths[colIdx] = Math.max(colWidths[colIdx], valLen * 1.1 + 5);
         }
         
         const borderStyle: ExcelJS.BorderStyle = 'thin';
@@ -91,7 +95,7 @@ export const exportStandard = async (
         if (val !== undefined && val !== null) {
           cell.value = val;
           const valLen = String(val).replace(/[^\x00-\xff]/g, 'aa').length;
-          colWidths[colIdx] = Math.max(colWidths[colIdx], valLen + 2);
+          colWidths[colIdx] = Math.max(colWidths[colIdx], valLen * 1.1 + 5);
         }
 
         const borderStyle: ExcelJS.BorderStyle = 'thin';
@@ -140,7 +144,8 @@ export const exportStandard = async (
   // 应用计算出的列宽
   colWidths.forEach((width, idx) => {
     const column = worksheet.getColumn(idx + 1);
-    column.width = Math.min(Math.max(width, 8), 50);
+    // 调高上限到 100
+    column.width = Math.min(Math.max(width, 10), 100);
   });
 
   const buffer = await workbook.xlsx.writeBuffer();

@@ -81,6 +81,31 @@ export const exportWithTemplate = async (
   const { gapRows, rowsPerStudent = 1 } = config;
   const studentCount = Math.ceil(rows.length / rowsPerStudent);
   
+  // 复制模板的所有列宽
+  templateSheet.columns.forEach((col, idx) => {
+    if (col.width) {
+      worksheet.getColumn(idx + 1).width = col.width;
+    }
+  });
+
+  // 用于追踪自适应列宽（与 standard.ts 逻辑一致）
+  const colWidths: number[] = new Array(templateSheet.columnCount).fill(0);
+  templateSheet.eachRow({ includeEmpty: true }, (row) => {
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      if (cell.value) {
+        const valLen = String(cell.value).replace(/[^\x00-\xff]/g, 'aa').length;
+        colWidths[colNumber - 1] = Math.max(colWidths[colNumber - 1], valLen * 1.1 + 5);
+      }
+    });
+  });
+
+  // 同时也参考模板原有的列宽设置
+  templateSheet.columns.forEach((col, idx) => {
+    if (col.width) {
+      colWidths[idx] = Math.max(colWidths[idx], col.width);
+    }
+  });
+
   // 获取扁平化后的表头
   const lastHeaderRow = headers[headers.length - 1];
   const flatHeaders = lastHeaderRow.map((h, i) => {
@@ -111,9 +136,16 @@ export const exportWithTemplate = async (
       
       const templateCell = templateSheet.getCell(mapping.cellAddress);
       const relativeRow = Number(templateCell.row);
-      const targetCell = worksheet.getRow(startRowOfStrip + relativeRow - 1).getCell(templateCell.col);
+      const colNumber = Number(templateCell.col);
+      const targetCell = worksheet.getRow(startRowOfStrip + relativeRow - 1).getCell(colNumber);
       
       targetCell.value = cellValue;
+
+      // 自适应宽度计算（与 standard.ts 逻辑一致）
+      if (cellValue !== undefined && cellValue !== null) {
+        const valLen = String(cellValue).replace(/[^\x00-\xff]/g, 'aa').length;
+        colWidths[colNumber - 1] = Math.max(colWidths[colNumber - 1], valLen * 1.1 + 5);
+      }
 
       const borderStyle: ExcelJS.BorderStyle = 'thin';
       targetCell.border = {
@@ -134,6 +166,12 @@ export const exportWithTemplate = async (
   }
 
   onProgress?.(100);
+  
+  // 应用最终计算出的列宽（取模板原宽和内容自适应宽的最大值）
+  colWidths.forEach((width, idx) => {
+    const column = worksheet.getColumn(idx + 1);
+    column.width = Math.min(Math.max(width, 10), 100);
+  });
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });

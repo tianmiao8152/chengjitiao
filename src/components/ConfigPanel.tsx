@@ -93,7 +93,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onChange, onNext, onB
                   </div>
                 )}
                 <h4 className="font-bold text-gray-800 mb-1">打印优化</h4>
-                <p className="text-xs text-gray-500">更清晰的边框和对比度，适合批量打印。</p>
+                <p className="text-xs text-gray-500">添加浅灰色背景，使成绩条层次更分明。</p>
               </button>
             </div>
 

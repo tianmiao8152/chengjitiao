@@ -28,10 +28,18 @@ export const exportToXLSX = async (
   const { headers, rows, headerMerges = [], merges = [] } = data;
   const { gapRows, rowsPerStudent = 1 } = config;
 
+  // 计算最大列数，确保所有行宽度一致 (使用更安全的方式遍历)
+  let maxCols = 0;
+  headers.forEach(h => { if (h.length > maxCols) maxCols = h.length; });
+  rows.forEach(r => { if (r.length > maxCols) maxCols = r.length; });
+
   let currentRow = 1;
   // 按照单人行数分组计算总进度
   const studentCount = Math.ceil(rows.length / rowsPerStudent);
   const headerCount = headers.length;
+
+  // 记录每列的最大字符长度，用于自动调整列宽
+  const colWidths: number[] = new Array(maxCols).fill(10);
 
   for (let i = 0; i < rows.length; i += rowsPerStudent) {
     const startRowOfStrip = currentRow;
@@ -40,7 +48,6 @@ export const exportToXLSX = async (
     // 1. 添加多行表头
     headers.forEach((headerRowData, hIdx) => {
       const hRow = worksheet.getRow(currentRow);
-      // 避免直接赋值数组，因为 exceljs 对首位为 undefined 的数组会处理为 1-based 索引，导致数据向左偏移
       hRow.font = { bold: true };
       hRow.alignment = { horizontal: 'center', vertical: 'middle' };
       
@@ -52,18 +59,25 @@ export const exportToXLSX = async (
         };
       }
 
-      headerRowData.forEach((val, colIdx) => {
+      // 遍历到最大列数，确保每一项都有边框
+      for (let colIdx = 0; colIdx < maxCols; colIdx++) {
         const cell = hRow.getCell(colIdx + 1);
+        const val = headerRowData[colIdx];
         if (val !== undefined && val !== null) {
           cell.value = val;
+          // 更新列宽参考
+          const valLen = String(val).replace(/[^\x00-\xff]/g, 'aa').length;
+          colWidths[colIdx] = Math.max(colWidths[colIdx], valLen + 2);
         }
+        
+        const borderStyle = 'thin';
         cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' }
+          top: { style: borderStyle },
+          left: { style: borderStyle },
+          bottom: { style: borderStyle },
+          right: { style: borderStyle }
         };
-      });
+      }
       currentRow++;
     });
 
@@ -85,21 +99,27 @@ export const exportToXLSX = async (
 
       const rowData = rows[rowIndex];
       const dRow = worksheet.getRow(currentRow);
-      // 避免直接赋值数组，防止偏移
       dRow.alignment = { horizontal: 'center', vertical: 'middle' };
       
-      rowData.forEach((val, colIdx) => {
+      // 遍历到最大列数，确保每一项都有边框
+      for (let colIdx = 0; colIdx < maxCols; colIdx++) {
         const cell = dRow.getCell(colIdx + 1);
+        const val = rowData[colIdx];
         if (val !== undefined && val !== null) {
           cell.value = val;
+          // 更新列宽参考
+          const valLen = String(val).replace(/[^\x00-\xff]/g, 'aa').length;
+          colWidths[colIdx] = Math.max(colWidths[colIdx], valLen + 2);
         }
+
+        const borderStyle = 'thin';
         cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' }
+          top: { style: borderStyle },
+          left: { style: borderStyle },
+          bottom: { style: borderStyle },
+          right: { style: borderStyle }
         };
-      });
+      }
       currentRow++;
     }
 
@@ -139,9 +159,11 @@ export const exportToXLSX = async (
 
   onProgress?.(100);
 
-  // 自动调整列宽
-  worksheet.columns.forEach(column => {
-    column.width = 15;
+  // 应用计算出的列宽
+  colWidths.forEach((width, idx) => {
+    const column = worksheet.getColumn(idx + 1);
+    // 限制最小和最大宽度
+    column.width = Math.min(Math.max(width, 8), 50);
   });
 
   const buffer = await workbook.xlsx.writeBuffer();

@@ -11,6 +11,7 @@ import ConfigPanel from './components/ConfigPanel';
 import Preview from './components/Preview';
 import PWAHandler from './components/PWAHandler';
 import { ToastProvider, useToast } from './components/Toast';
+import packageJson from '../package.json';
 
 import * as XLSX from 'xlsx';
 
@@ -123,14 +124,17 @@ const AppContent: React.FC = () => {
         </div>
       )}
 
-      <header className="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+      <header className="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <div className="bg-blue-600 p-2 rounded-lg">
             <Table className="text-white" size={24} />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">成绩条生成器</h1>
-            <p className="text-xs text-gray-500">Fast & Offline Excel Splitter</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold tracking-tight">成绩条生成器</h1>
+              <span className="px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 text-[10px] font-bold self-start mt-1">v{packageJson.version}</span>
+            </div>
+            <p className="text-xs text-gray-500">支持自定义 Excel 模板匹配导出 🚀</p>
           </div>
         </div>
 
@@ -243,7 +247,7 @@ const AppContent: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-6"
           >
             <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
               <div className="flex flex-col items-center text-center">

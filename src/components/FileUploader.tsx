@@ -89,11 +89,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onUpload }) => {
         </p>
       </div>
 
-      <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl">
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-4xl">
         {[
           { icon: <FileType className="text-blue-500" />, title: "格式支持", desc: ".xlsx / .xls" },
+          { icon: <FileType className="text-purple-500" />, title: "模板匹配", desc: "支持自定义导出样式" },
           { icon: <AlertCircle className="text-green-500" />, title: "本地安全", desc: "不上传服务器" },
-          { icon: <FileType className="text-purple-500" />, title: "离线可用", desc: "PWA 缓存支持" },
+          { icon: <FileType className="text-orange-500" />, title: "离线可用", desc: "PWA 缓存支持" },
         ].map((item, i) => (
           <div key={i} className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
             <div className="mt-1">{item.icon}</div>

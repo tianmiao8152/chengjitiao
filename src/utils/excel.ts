@@ -7,8 +7,21 @@ import { ExcelData } from '../types';
 export const parseSheetData = (workbook: XLSX.WorkBook, sheetName: string): Omit<ExcelData, 'fileName' | 'sheets'> => {
   const worksheet = workbook.Sheets[sheetName];
   
-  // 转换为二维数组，保留所有原始数据
-  const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+  // 获取工作表的完整范围
+  const ref = worksheet['!ref'] || 'A1';
+  const range = XLSX.utils.decode_range(ref);
+  const jsonData: any[][] = [];
+
+  // 手动遍历范围以确保捕获所有单元格（包括空单元格）
+  for (let r = 0; r <= range.e.r; r++) {
+    const row: any[] = [];
+    for (let c = 0; c <= range.e.c; c++) {
+      const cellAddress = XLSX.utils.encode_cell({ r, c });
+      const cell = worksheet[cellAddress];
+      row.push(cell ? cell.v : null);
+    }
+    jsonData.push(row);
+  }
   
   if (jsonData.length === 0) {
     throw new Error('工作表内容为空');
@@ -71,6 +84,37 @@ export const readExcelFile = async (file: File): Promise<ExcelData & { workbook:
 
     reader.onerror = () => reject(new Error('文件读取错误'));
     reader.readAsArrayBuffer(file);
+  });
+};
+
+/**
+ * 将列索引转换为 Excel 列字母 (0 -> A, 1 -> B, ...)
+ * @param col 列索引
+ */
+export const colToLetter = (col: number): string => {
+  let letter = '';
+  while (col >= 0) {
+    letter = String.fromCharCode((col % 26) + 65) + letter;
+    col = Math.floor(col / 26) - 1;
+  }
+  return letter;
+};
+
+/**
+ * 获取扁平化后的表头名称
+ * @param headers 多行表头数据
+ */
+export const getFlatHeaders = (headers: any[][]): string[] => {
+  if (headers.length === 0) return [];
+  const lastHeaderRow = headers[headers.length - 1];
+  return lastHeaderRow.map((h, i) => {
+    if (h !== undefined && h !== null && h !== '') return String(h);
+    // 如果最后一行对应位置为空，向上寻找
+    for (let r = headers.length - 2; r >= 0; r--) {
+      const val = headers[r][i];
+      if (val !== undefined && val !== null && val !== '') return String(val);
+    }
+    return `列 ${i + 1}`;
   });
 };
 

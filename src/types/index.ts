@@ -21,6 +21,8 @@ export interface TemplateData {
   fileName: string;
   mappings: TemplateMapping[];
   rawBuffer: ArrayBuffer; // 存储模板文件的原始二进制数据
+  rows?: any[][];         // 模板的第一页行数据，用于 UI 展示
+  merges?: ExcelMerge[];  // 模板中的合并单元格信息
 }
 
 /**

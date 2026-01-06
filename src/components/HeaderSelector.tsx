@@ -3,7 +3,7 @@ import { ExcelData, ExcelMerge, TemplateData, TemplateMapping } from '../types';
 import { ChevronLeft, ChevronRight, Check, Layers, FileSpreadsheet, Plus } from 'lucide-react';
 import { useToast } from './Toast';
 import * as XLSX from 'xlsx';
-import { parseSheetData } from '../utils/excel';
+import { parseSheetData, getFlatHeaders } from '../utils/excel';
 import TemplateMapper from './TemplateMapper';
 
 interface HeaderSelectorProps {
@@ -39,19 +39,7 @@ const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, workbook, onConfi
   }, [selectedRows, allRows]);
 
   // 获取最底层的表头名称（如果是多行表头，取最后一行非空值）
-  const flatHeaders = useMemo(() => {
-    if (currentHeaders.length === 0) return [];
-    const lastHeaderRow = currentHeaders[currentHeaders.length - 1];
-    return lastHeaderRow.map((h, i) => {
-      if (h !== undefined && h !== null && h !== '') return String(h);
-      // 如果最后一行对应位置为空，向上寻找
-      for (let r = currentHeaders.length - 2; r >= 0; r--) {
-        const val = currentHeaders[r][i];
-        if (val !== undefined && val !== null && val !== '') return String(val);
-      }
-      return `列 ${i + 1}`;
-    });
-  }, [currentHeaders]);
+  const flatHeaders = useMemo(() => getFlatHeaders(currentHeaders), [currentHeaders]);
 
   /**
    * 处理模板文件上传
@@ -67,10 +55,16 @@ const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, workbook, onConfi
 
     try {
       const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(new Uint8Array(buffer), { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const sheetData = parseSheetData(workbook, firstSheetName);
+      
       setTemplate({
         fileName: file.name,
         rawBuffer: buffer,
-        mappings: []
+        mappings: [],
+        rows: [sheetData.headers[0], ...sheetData.rows],
+        merges: sheetData.merges
       });
       showToast('模板导入成功，请设置映射关系', 'success');
     } catch (error) {
@@ -176,6 +170,8 @@ const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, workbook, onConfi
       {template && (
         <TemplateMapper 
           headers={flatHeaders}
+          templateRows={template.rows}
+          templateMerges={template.merges}
           initialMappings={template.mappings}
           onMappingChange={(mappings) => setTemplate({ ...template, mappings })}
           onClose={() => setTemplate(undefined)}

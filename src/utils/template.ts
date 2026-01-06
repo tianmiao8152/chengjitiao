@@ -53,7 +53,26 @@ export const exportWithTemplate = async (
   const templateWorkbook = new ExcelJS.Workbook();
   await templateWorkbook.xlsx.load(data.template.rawBuffer);
   const templateSheet = templateWorkbook.worksheets[0];
-  const templateRowCount = templateSheet.rowCount;
+  
+  // 动态计算模板高度：取原始行数、映射单元格行数、合并单元格行数的最大值
+  let templateRowCount = templateSheet.rowCount;
+  data.template.mappings.forEach(m => {
+    if (m.cellAddress) {
+      const rowMatch = m.cellAddress.match(/\d+/);
+      if (rowMatch) {
+        const row = parseInt(rowMatch[0]);
+        if (row > templateRowCount) templateRowCount = row;
+      }
+    }
+  });
+  if (templateSheet.model.merges) {
+    templateSheet.model.merges.forEach(mergeRange => {
+      const [, bottomRight] = mergeRange.split(':');
+      const brCell = templateSheet.getCell(bottomRight);
+      const row = Number(brCell.row);
+      if (row > templateRowCount) templateRowCount = row;
+    });
+  }
 
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('成绩条');

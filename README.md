@@ -1,6 +1,7 @@
 # 📊 成绩条在线生成器 (Offline Grade Slip Generator)
 
 一个高效、安全、且支持离线使用的成绩条生成工具。专为教师设计，可将 Excel 成绩表快速转换为易于裁剪的成绩条格式。
+
 ![React](https://img.shields.io/badge/React-18-blue.svg)![Vite](https://img.shields.io/badge/Vite-5-646CFF.svg)![PWA](https://img.shields.io/badge/PWA-Ready-orange.svg)
 
 ## ✨ 核心特性

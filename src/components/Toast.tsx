@@ -31,6 +31,13 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
 
+    // 如果是错误类型，同时在控制台输出
+    if (type === 'error') {
+      console.error(`[Error] ${message}`);
+    } else {
+      console.log(`[${type}] ${message}`);
+    }
+
     // 3秒后自动移除
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));

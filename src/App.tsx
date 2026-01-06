@@ -42,6 +42,28 @@ const AppContent: React.FC = () => {
     };
   }, []);
 
+  /**
+   * 全局错误监听
+   */
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      showToast(`系统错误: ${event.message}`, 'error');
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const message = event.reason instanceof Error ? event.reason.message : String(event.reason);
+      showToast(`异步错误: ${message}`, 'error');
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, [showToast]);
+
   const handleFileUpload = async (file: File) => {
     if (!validateExcelFile(file)) {
       showToast('请上传有效的 Excel 文件 (.xlsx 或 .xls)', 'error');
@@ -76,7 +98,8 @@ const AppContent: React.FC = () => {
       });
       showToast('文件导出成功', 'success');
     } catch (e) {
-      showToast('导出失败', 'error');
+      const message = e instanceof Error ? e.message : '导出失败';
+      showToast(message, 'error');
     } finally {
       setProgress(null);
     }
@@ -106,7 +129,7 @@ const AppContent: React.FC = () => {
             <Table className="text-white" size={24} />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">成绩条快速生成工具</h1>
+            <h1 className="text-xl font-bold tracking-tight">成绩条生成器</h1>
             <p className="text-xs text-gray-500">Fast & Offline Excel Splitter</p>
           </div>
         </div>

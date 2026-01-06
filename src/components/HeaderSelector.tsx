@@ -1,14 +1,15 @@
-import React, { useState, useMemo } from 'react';
-import { ExcelData, ExcelMerge } from '../types';
-import { ChevronLeft, ChevronRight, Check, Layers } from 'lucide-react';
+import React, { useState, useMemo, useRef } from 'react';
+import { ExcelData, ExcelMerge, TemplateData, TemplateMapping } from '../types';
+import { ChevronLeft, ChevronRight, Check, Layers, FileSpreadsheet, Plus } from 'lucide-react';
 import { useToast } from './Toast';
 import * as XLSX from 'xlsx';
 import { parseSheetData } from '../utils/excel';
+import TemplateMapper from './TemplateMapper';
 
 interface HeaderSelectorProps {
   data: ExcelData;
   workbook?: XLSX.WorkBook;
-  onConfirm: (headers: any[][], rows: any[][], headerMerges: ExcelMerge[]) => void;
+  onConfirm: (headers: any[][], rows: any[][], headerMerges: ExcelMerge[], template?: TemplateData) => void;
   onSheetChange: (newData: ExcelData) => void;
   onBack: () => void;
 }
@@ -26,9 +27,56 @@ interface HeaderSelectorProps {
  */
 const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, workbook, onConfirm, onSheetChange, onBack }) => {
   const [selectedRows, setSelectedRows] = useState<number[]>([0]); // 默认第一行
+  const [template, setTemplate] = useState<TemplateData | undefined>(data.template);
+  const templateInputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToast();
   
   const allRows = useMemo(() => [data.headers[0], ...data.rows], [data.headers, data.rows]);
+
+  const currentHeaders = useMemo(() => {
+    const sorted = [...selectedRows].sort((a, b) => a - b);
+    return sorted.map(i => allRows[i]);
+  }, [selectedRows, allRows]);
+
+  // 获取最底层的表头名称（如果是多行表头，取最后一行非空值）
+  const flatHeaders = useMemo(() => {
+    if (currentHeaders.length === 0) return [];
+    const lastHeaderRow = currentHeaders[currentHeaders.length - 1];
+    return lastHeaderRow.map((h, i) => {
+      if (h !== undefined && h !== null && h !== '') return String(h);
+      // 如果最后一行对应位置为空，向上寻找
+      for (let r = currentHeaders.length - 2; r >= 0; r--) {
+        const val = currentHeaders[r][i];
+        if (val !== undefined && val !== null && val !== '') return String(val);
+      }
+      return `列 ${i + 1}`;
+    });
+  }, [currentHeaders]);
+
+  /**
+   * 处理模板文件上传
+   */
+  const handleTemplateUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      showToast('请上传有效的 Excel 模板文件 (.xlsx 或 .xls)', 'error');
+      return;
+    }
+
+    try {
+      const buffer = await file.arrayBuffer();
+      setTemplate({
+        fileName: file.name,
+        rawBuffer: buffer,
+        mappings: []
+      });
+      showToast('模板导入成功，请设置映射关系', 'success');
+    } catch (error) {
+      showToast('导入模板失败', 'error');
+    }
+  };
 
   const toggleRow = (index: number) => {
     setSelectedRows(prev => {
@@ -78,7 +126,7 @@ const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, workbook, onConfi
         e: { r: m.e.r - minIndex, c: m.e.c }
       }));
     
-    onConfirm(headers, rows, headerMerges);
+    onConfirm(headers, rows, headerMerges, template);
   };
 
   return (
@@ -89,24 +137,50 @@ const HeaderSelector: React.FC<HeaderSelectorProps> = ({ data, workbook, onConfi
           <p className="text-gray-500 mt-2">点击选择一行或多行连续数据作为“表头”（支持多级表头）</p>
         </div>
 
-        {data.sheets && data.sheets.length > 1 && (
-          <div className="flex items-center gap-3 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-2 text-gray-500 pl-2">
-              <Layers size={18} />
-              <span className="text-sm font-medium whitespace-nowrap">切换工作表:</span>
+        <div className="flex items-center gap-3">
+          <input
+            type="file"
+            ref={templateInputRef}
+            onChange={handleTemplateUpload}
+            accept=".xlsx, .xls"
+            className="hidden"
+          />
+          <button
+            onClick={() => templateInputRef.current?.click()}
+            className="flex items-center gap-2 bg-white border-2 border-blue-100 text-blue-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-50 hover:border-blue-200 transition-all shadow-sm"
+          >
+            <FileSpreadsheet size={18} />
+            <span>{template ? '更新模板 (XLS)' : '导入模板 (XLS)'}</span>
+          </button>
+
+          {data.sheets && data.sheets.length > 1 && (
+            <div className="flex items-center gap-3 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
+              <div className="flex items-center gap-2 text-gray-500 pl-2">
+                <Layers size={18} />
+                <span className="text-sm font-medium whitespace-nowrap">切换工作表:</span>
+              </div>
+              <select 
+                value={data.currentSheet}
+                onChange={(e) => handleSheetChange(e.target.value)}
+                className="bg-gray-50 border-none text-gray-700 text-sm rounded-lg focus:ring-blue-500 block w-full p-1.5 font-bold cursor-pointer hover:bg-gray-100 transition-colors"
+              >
+                {data.sheets.map(name => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
             </div>
-            <select 
-              value={data.currentSheet}
-              onChange={(e) => handleSheetChange(e.target.value)}
-              className="bg-gray-50 border-none text-gray-700 text-sm rounded-lg focus:ring-blue-500 block w-full p-1.5 font-bold cursor-pointer hover:bg-gray-100 transition-colors"
-            >
-              {data.sheets.map(name => (
-                <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {template && (
+        <TemplateMapper 
+          headers={flatHeaders}
+          initialMappings={template.mappings}
+          onMappingChange={(mappings) => setTemplate({ ...template, mappings })}
+          onClose={() => setTemplate(undefined)}
+        />
+      )}
 
       <div className="bg-orange-50/50 border border-orange-100 rounded-lg px-4 py-2 mb-4 flex items-center justify-between">
         <p className="text-xs text-orange-600 font-medium">⚠️ 仅展示前 10 行数据供选择表头</p>

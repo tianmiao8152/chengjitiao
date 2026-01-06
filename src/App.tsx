@@ -184,8 +184,8 @@ const AppContent: React.FC = () => {
                   data={excelData}
                   workbook={workbook || undefined}
                   onSheetChange={(newData) => setExcelData(newData)}
-                  onConfirm={(headers, rows, headerMerges) => {
-                    setExcelData({ ...excelData, headers, rows, headerMerges });
+                  onConfirm={(headers, rows, headerMerges, template) => {
+                    setExcelData({ ...excelData, headers, rows, headerMerges, template });
                     setStep('config');
                     showToast('表头设置已保存', 'success');
                   }}

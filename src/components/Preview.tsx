@@ -117,88 +117,123 @@ const Preview: React.FC<PreviewProps> = ({
 
       <div className="mb-8 text-center">
         <h2 className="text-2xl font-bold text-gray-800">生成预览</h2>
-        <p className="text-gray-500 mt-2">预览生成效果，确认无误后导出文件</p>
-      </div>
-
-      <div className="flex-1 overflow-auto bg-gray-100 p-6 rounded-2xl mb-8 flex flex-col items-center gap-4">
-        <div className="bg-white p-8 shadow-sm w-full max-w-5xl border border-gray-200 overflow-x-auto">
-          <div className="space-y-8 min-w-max px-4">
-            {Array.from({ length: previewCount }).map((_, studentIdx) => {
-              const studentRows = getPreviewStudentRows(studentIdx);
-              return (
-                <React.Fragment key={studentIdx}>
-                  <div className="border border-gray-200 shadow-sm rounded-sm">
-                    <table className="w-full text-sm text-center border-collapse">
-                      <thead className={config.useOptimizedStyle ? 'bg-gray-100' : 'bg-gray-50'}>
-                        {data.headers.map((headerRow, hIdx) => (
-                          <tr key={hIdx}>
-                            {Array.from({ length: maxCols }).map((_, i) => {
-                              const h = headerRow[i];
-                              const span = getHeaderCellSpan(hIdx, i);
-                              if (!span.rendered) return null;
-                              return (
-                                <th 
-                                  key={i} 
-                                  rowSpan={span.rowSpan}
-                                  colSpan={span.colSpan}
-                                  className="border border-gray-200 px-4 py-2.5 font-bold whitespace-nowrap"
-                                >
-                                  {String(h ?? '')}
-                                </th>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </thead>
-                      <tbody>
-                        {studentRows.map((row, rIdx) => (
-                          <tr key={rIdx} className="hover:bg-gray-50/50 transition-colors">
-                            {Array.from({ length: maxCols }).map((_, i) => {
-                              const cell = row[i];
-                              const span = getDataCellSpan(studentIdx, rIdx, i);
-                              if (!span.rendered) return null;
-                              return (
-                                <td 
-                                  key={i} 
-                                  rowSpan={span.rowSpan}
-                                  colSpan={span.colSpan}
-                                  className="border border-gray-200 px-4 py-2 whitespace-nowrap"
-                                >
-                                  {String(cell ?? '')}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  {studentIdx < previewCount - 1 && (
-                    <div className="flex flex-col items-center gap-1 py-2 opacity-30">
-                      {Array.from({ length: config.gapRows }).map((_, i) => (
-                        <div key={i} className="w-full border-t border-dashed border-gray-400 h-1" />
-                      ))}
-                      <span className="text-[10px] text-gray-400">间隔行 ({config.gapRows})</span>
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
+        {data.template ? (
+          <div className="mt-2 flex items-center justify-center gap-2 text-blue-600 bg-blue-50 px-4 py-2 rounded-full inline-flex mx-auto border border-blue-100">
+            <FileSpreadsheet size={16} />
+            <span className="text-sm font-bold">已启用模板: {data.template.fileName}</span>
           </div>
-        </div>
-
-        {totalStudents > previewCount && (
-          <div className="flex flex-col items-center gap-2 py-4 px-6 bg-white/50 backdrop-blur-sm rounded-xl border border-white shadow-sm">
-            <p className="text-gray-500 text-sm font-medium">
-              预览仅展示前 <span className="text-blue-600 font-bold">{previewCount}</span> 条成绩条
-            </p>
-            <div className="flex items-center gap-2 text-xs text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
-              <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
-              还有 <span className="font-bold text-gray-600">{totalStudents - previewCount}</span> 名学生数据将在导出时自动生成
-            </div>
-          </div>
+        ) : (
+          <p className="text-gray-500 mt-2">预览生成效果，确认无误后导出文件</p>
         )}
       </div>
+
+      {data.template ? (
+        <div className="flex-1 overflow-auto bg-gray-100 p-6 rounded-2xl mb-8 flex flex-col items-center justify-center text-center">
+          <div className="max-w-md bg-white p-10 rounded-3xl shadow-xl border border-blue-100">
+            <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <FileSpreadsheet size={40} />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">模板模式已开启</h3>
+            <p className="text-gray-500 text-sm leading-relaxed mb-6">
+              由于使用了自定义 Excel 模板，网页端暂不支持实时预览样式。导出的文件将严格按照您的模板结构和映射关系生成。
+            </p>
+            <div className="bg-blue-50 p-4 rounded-xl text-left">
+              <div className="text-xs text-blue-400 font-bold uppercase tracking-wider mb-2">映射关系</div>
+              <div className="space-y-1">
+                {data.template.mappings.filter(m => m.cellAddress).slice(0, 5).map((m, i) => (
+                  <div key={i} className="flex justify-between text-xs">
+                    <span className="text-gray-600">{m.headerName}</span>
+                    <span className="text-blue-600 font-bold">{m.cellAddress}</span>
+                  </div>
+                ))}
+                {data.template.mappings.filter(m => m.cellAddress).length > 5 && (
+                  <div className="text-xs text-gray-400 text-center pt-1">... 及其他字段</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-auto bg-gray-100 p-6 rounded-2xl mb-8 flex flex-col items-center gap-4">
+          <div className="bg-white p-8 shadow-sm w-full max-w-5xl border border-gray-200 overflow-x-auto">
+            <div className="space-y-8 min-w-max px-4">
+              {Array.from({ length: previewCount }).map((_, studentIdx) => {
+                const studentRows = getPreviewStudentRows(studentIdx);
+                return (
+                  <React.Fragment key={studentIdx}>
+                    <div className="border border-gray-200 shadow-sm rounded-sm">
+                      <table className="w-full text-sm text-center border-collapse">
+                        <thead className={config.useOptimizedStyle ? 'bg-gray-100' : 'bg-gray-50'}>
+                          {data.headers.map((headerRow, hIdx) => (
+                            <tr key={hIdx}>
+                              {Array.from({ length: maxCols }).map((_, i) => {
+                                const h = headerRow[i];
+                                const span = getHeaderCellSpan(hIdx, i);
+                                if (!span.rendered) return null;
+                                return (
+                                  <th 
+                                    key={i} 
+                                    rowSpan={span.rowSpan}
+                                    colSpan={span.colSpan}
+                                    className="border border-gray-200 px-4 py-2.5 font-bold whitespace-nowrap"
+                                  >
+                                    {String(h ?? '')}
+                                  </th>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </thead>
+                        <tbody>
+                          {studentRows.map((row, rIdx) => (
+                            <tr key={rIdx} className="hover:bg-gray-50/50 transition-colors">
+                              {Array.from({ length: maxCols }).map((_, i) => {
+                                const cell = row[i];
+                                const span = getDataCellSpan(studentIdx, rIdx, i);
+                                if (!span.rendered) return null;
+                                return (
+                                  <td 
+                                    key={i} 
+                                    rowSpan={span.rowSpan}
+                                    colSpan={span.colSpan}
+                                    className="border border-gray-200 px-4 py-2 whitespace-nowrap"
+                                  >
+                                    {String(cell ?? '')}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {studentIdx < previewCount - 1 && (
+                      <div className="flex flex-col items-center gap-1 py-2 opacity-30">
+                        {Array.from({ length: config.gapRows }).map((_, i) => (
+                          <div key={i} className="w-full border-t border-dashed border-gray-400 h-1" />
+                        ))}
+                        <span className="text-[10px] text-gray-400">间隔行 ({config.gapRows})</span>
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          </div>
+
+          {totalStudents > previewCount && (
+            <div className="flex flex-col items-center gap-2 py-4 px-6 bg-white/50 backdrop-blur-sm rounded-xl border border-white shadow-sm">
+              <p className="text-gray-500 text-sm font-medium">
+                预览仅展示前 <span className="text-blue-600 font-bold">{previewCount}</span> 条成绩条
+              </p>
+              <div className="flex items-center gap-2 text-xs text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
+                还有 <span className="font-bold text-gray-600">{totalStudents - previewCount}</span> 名学生数据将在导出时自动生成
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 mb-8">
         <button

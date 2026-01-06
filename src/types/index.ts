@@ -7,6 +7,23 @@ export interface ExcelMerge {
 }
 
 /**
+ * 模板匹配映射关系
+ */
+export interface TemplateMapping {
+  headerName: string;   // 原始表头名称
+  cellAddress: string;  // 模板中的单元格地址，如 "A1", "B2"
+}
+
+/**
+ * 模板数据
+ */
+export interface TemplateData {
+  fileName: string;
+  mappings: TemplateMapping[];
+  rawBuffer: ArrayBuffer; // 存储模板文件的原始二进制数据
+}
+
+/**
  * 解析后的 Excel 数据结构
  */
 export interface ExcelData {
@@ -17,6 +34,7 @@ export interface ExcelData {
   headerMerges?: ExcelMerge[]; // 仅属于表头区域的合并单元格信息（相对坐标）
   sheets?: string[];       // 所有工作表名称
   currentSheet?: string;   // 当前选中的工作表名称
+  template?: TemplateData;  // 可选的模板信息
 }
 
 /**

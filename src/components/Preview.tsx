@@ -1,35 +1,31 @@
 import React, { useMemo } from 'react';
 import { ExcelData, GeneratorConfig } from '../types';
-import { ChevronLeft, FileDown, FileSpreadsheet, CheckCircle2 } from 'lucide-react';
+import { FileSpreadsheet } from 'lucide-react';
 import { colToLetter, getFlatHeaders } from '../utils/excel';
 
 interface PreviewProps {
   data: ExcelData;
   config: GeneratorConfig;
-  onExportXLSX: () => void;
-  onBack: () => void;
   isProcessing?: boolean;
   progress?: number;
 }
 
 /**
- * 预览与导出组件
+ * 预览组件
  * 
- * 展示生成的成绩条效果预览，并触发最终的导出流程。
+ * 展示生成的成绩条效果预览。
  * 支持普通模式和模板模式的预览。
  */
 const Preview: React.FC<PreviewProps> = ({ 
   data, 
   config, 
-  onExportXLSX, 
-  onBack,
   isProcessing = false,
   progress = 0
 }) => {
   // 计算总学生数
   const totalStudents = Math.ceil(data.rows.length / (config.rowsPerStudent || 1));
-  // 预览前 3 个成绩条
-  const previewCount = Math.min(3, totalStudents);
+  // 预览前 4 个成绩条
+  const previewCount = Math.min(4, totalStudents);
   
   // 计算最大列数，确保预览宽度一致
   const maxCols = useMemo(() => {
@@ -169,7 +165,7 @@ const Preview: React.FC<PreviewProps> = ({
   return (
     <div className="flex flex-col h-full relative">
       {isProcessing && (
-        <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
+        <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center rounded-2xl">
           <div className="w-full max-w-md">
             <div className="mb-4 flex justify-between items-end">
               <span className="text-blue-600 font-bold text-lg">正在生成文件...</span>
@@ -186,20 +182,15 @@ const Preview: React.FC<PreviewProps> = ({
         </div>
       )}
 
-      <div className="mb-8 text-center">
-        <h2 className="text-2xl font-bold text-gray-800">生成预览</h2>
-        {data.template ? (
-          <div className="mt-2 flex items-center justify-center gap-2 text-blue-600 bg-blue-50 px-4 py-2 rounded-full inline-flex mx-auto border border-blue-100">
-            <FileSpreadsheet size={16} />
-            <span className="text-sm font-bold">已启用模板: {data.template.fileName}</span>
+      <div className="flex-1 overflow-auto bg-gray-100/50 p-6 rounded-2xl border border-gray-200 flex flex-col items-center gap-4 min-h-[500px]">
+        {data.template && (
+          <div className="flex items-center justify-center gap-2 text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 mb-2">
+            <FileSpreadsheet size={14} />
+            <span className="text-xs font-bold">已启用模板: {data.template.fileName}</span>
           </div>
-        ) : (
-          <p className="text-gray-500 mt-2">预览生成效果，确认无误后导出文件</p>
         )}
-      </div>
-
-      <div className="flex-1 overflow-auto bg-gray-100 p-6 rounded-2xl mb-8 flex flex-col items-center gap-4">
-        <div className="bg-white p-8 shadow-sm w-full max-w-5xl border border-gray-200 overflow-x-auto">
+        
+        <div className="bg-white p-8 shadow-md w-full border border-gray-200 overflow-x-auto rounded-xl">
           <div className="space-y-8 min-w-max px-4">
             {Array.from({ length: previewCount }).map((_, studentIdx) => (
               <React.Fragment key={studentIdx}>
@@ -307,39 +298,6 @@ const Preview: React.FC<PreviewProps> = ({
             </div>
           </div>
         )}
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 mb-8">
-        <button
-          onClick={onExportXLSX}
-          className="flex items-center justify-between p-6 bg-white border-2 border-green-100 hover:border-green-500 rounded-2xl transition-all group shadow-sm hover:shadow-md"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-50 text-green-600 rounded-xl group-hover:bg-green-600 group-hover:text-white transition-colors">
-              <FileSpreadsheet size={24} />
-            </div>
-            <div className="text-left">
-              <h4 className="font-bold text-gray-800">导出为 Excel</h4>
-              <p className="text-xs text-gray-500">支持继续编辑样式</p>
-            </div>
-          </div>
-          <FileDown className="text-green-500" />
-        </button>
-      </div>
-
-      <div className="flex justify-between items-center pt-6 border-t">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 px-6 py-2.5 text-gray-600 hover:text-gray-800 font-medium transition-colors"
-        >
-          <ChevronLeft size={20} />
-          <span>返回修改设置</span>
-        </button>
-        
-        <div className="flex items-center gap-2 text-green-600 font-medium">
-          <CheckCircle2 size={20} />
-          <span>就绪，可随时下载</span>
-        </div>
       </div>
     </div>
   );

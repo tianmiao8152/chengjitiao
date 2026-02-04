@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Table, Settings, Eye, Download, Trash2, WifiOff } from 'lucide-react';
+import { Upload, Table, Eye, Download, Trash2, WifiOff, ChevronLeft, FileDown, Settings } from 'lucide-react';
 import { ExcelData, GeneratorConfig, AppStep, ProgressStatus } from './types';
 import { readExcelFile, validateExcelFile } from './utils/excel';
 import { exportToXLSX } from './utils/exporter';
@@ -23,7 +23,7 @@ const AppContent: React.FC = () => {
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
   const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
   const [config, setConfig] = useState<GeneratorConfig>({
-    gapRows: 1,
+    gapRows: 2,
     useOptimizedStyle: true,
     headerRows: 1,
     rowsPerStudent: 1
@@ -109,7 +109,6 @@ const AppContent: React.FC = () => {
   const steps = [
     { id: 'upload', title: '上传文件', icon: <Upload size={20} /> },
     { id: 'select', title: '选择表头', icon: <Table size={20} /> },
-    { id: 'config', title: '生成设置', icon: <Settings size={20} /> },
     { id: 'preview', title: '预览导出', icon: <Eye size={20} /> },
   ];
 
@@ -161,7 +160,7 @@ const AppContent: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main className="max-w-[1280px] mx-auto px-6 py-8">
         <StepIndicator steps={steps} currentStep={step} />
 
         <div className="mt-8">
@@ -190,26 +189,10 @@ const AppContent: React.FC = () => {
                   onSheetChange={(newData) => setExcelData(newData)}
                   onConfirm={(headers, rows, headerMerges, template) => {
                     setExcelData({ ...excelData, headers, rows, headerMerges, template });
-                    setStep('config');
+                    setStep('preview');
                     showToast('表头设置已保存', 'success');
                   }}
                   onBack={() => setStep('upload')}
-                />
-              </motion.div>
-            )}
-
-            {step === 'config' && (
-              <motion.div
-                key="config"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <ConfigPanel
-                  config={config}
-                  onChange={setConfig}
-                  onNext={() => setStep('preview')}
-                  onBack={() => setStep('select')}
                 />
               </motion.div>
             )}
@@ -220,15 +203,54 @@ const AppContent: React.FC = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-220px)] min-h-[650px]"
               >
-                <Preview
-                  data={excelData}
-                  config={config}
-                  onExportXLSX={handleExportXLSX}
-                  onBack={() => setStep('config')}
-                  isProcessing={!!progress}
-                  progress={progress?.current || 0}
-                />
+                {/* 左侧配置栏 */}
+                <div className="lg:col-span-4 flex flex-col gap-4">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full overflow-hidden">
+                    <div className="p-5 border-b border-gray-100 bg-gray-50/50">
+                      <h2 className="font-bold text-gray-800 flex items-center gap-2 text-lg">
+                        <Settings size={20} className="text-blue-500" />
+                        参数设置
+                      </h2>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                      <ConfigPanel
+                        config={config}
+                        onChange={setConfig}
+                      />
+                    </div>
+
+                    <div className="p-5 border-t border-gray-100 bg-gray-50 space-y-4">
+                      <button
+                        onClick={handleExportXLSX}
+                        className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-4 rounded-xl font-bold shadow-lg shadow-blue-200 transition-all active:scale-95 text-lg"
+                      >
+                        <FileDown size={22} />
+                        <span>导出成绩条</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => setStep('select')}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 text-gray-500 hover:text-gray-700 font-medium transition-colors text-sm hover:bg-gray-100 rounded-lg"
+                      >
+                        <ChevronLeft size={16} />
+                        <span>返回选择表头</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 右侧预览区 */}
+                <div className="lg:col-span-8 h-full">
+                  <Preview
+                    data={excelData}
+                    config={config}
+                    isProcessing={!!progress}
+                    progress={progress?.current || 0}
+                  />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

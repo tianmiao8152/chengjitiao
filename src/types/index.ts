@@ -52,7 +52,7 @@ export interface GeneratorConfig {
 /**
  * 应用当前的步骤状态
  */
-export type AppStep = 'upload' | 'select' | 'config' | 'preview';
+export type AppStep = 'upload' | 'select' | 'preview';
 
 /**
  * 任务处理进度状态

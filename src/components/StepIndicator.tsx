@@ -29,7 +29,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ steps, currentStep }) => 
   const currentIndex = steps.findIndex(s => s.id === currentStep);
 
   return (
-    <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4">
+    <div className="flex items-center justify-between w-full max-w-4xl mx-auto px-4">
       {steps.map((step, index) => {
         const isActive = index <= currentIndex;
         const isCurrent = index === currentIndex;
